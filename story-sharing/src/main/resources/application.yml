@@ -1,0 +1,69 @@
+server:
+  port: 8080
+spring:
+  application:
+    #应用的名称，可选
+    name: story_sharing
+  datasource:
+    druid:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://localhost:3306/story?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+      username: root
+      password: 123456
+  main:
+    allow-circular-references: true
+
+  redis:
+    host: 192.168.85.142
+    port: 6379
+    database: 0
+    timeout: 1800000
+    lettuce:
+      pool:
+        max-active: 20
+        max-wait: -1
+        max-idle: 5
+        min-idle: 5
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+  mail:
+    # 配置 SMTP 服务器地址
+    host: smtp.qq.com
+    # 发送者邮箱
+    username: 2291862604@qq.com
+    # 配置密码，注意不是真正的密码，而是刚刚申请到的授权码
+    password: dghcfdcrygzieaeb
+    # 端口号465或587
+    port: 587
+    # 默认的邮件编码为UTF-8
+    default-encoding: UTF-8
+    # 配置SSL 加密工厂
+    properties:
+      mail:
+        smtp:
+          socketFactoryClass: javax.net.ssl.SSLSocketFactory
+        #表示开启 DEBUG 模式，这样，邮件发送过程的日志会在控制台打印出来，方便排查错误
+        debug: true
+
+aliyun:
+  oss:
+    endpoint: http://oss-cn-beijing.aliyuncs.com
+    accessKeyId: LTAI5tQE1t5DcE119v6rbXEq
+    AccessKeySecret: cPFf8kYz1Q3pyq5pHnZLgOLdCnWOhN
+    BucketName: haidong_story
+
+
+#spring:
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://localhost:3306/story?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+#    username: root
+#    password: 123456
+mybatis:
+  type-aliases-package: com.haidong.storysharing.entry
+  mapper-locations: classpath:mapper/*.xml
+
+

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.haidong.storysharing.dao.HistoryMapper">
+  <resultMap id="HistoryResultMap" type="com.haidong.storysharing.entry.History">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="user_id" jdbcType="BIGINT" property="userId" />
+    <result column="story_id" jdbcType="BIGINT" property="storyId" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+  </resultMap>
+
+  <!--<resultMap id="historyStoryResultMap" type="com.haidong.storysharing.dto.StoryHistoryDTO">
+    <result property="id" column="id"/>
+    <result property="categoryId" column="category_id"/>
+    <result property="categoryName" column="category_name"/>
+    <result property="storyIllustration" column="story_illustration"/>
+    <result property="storyTitle" column="story_title"/>
+    <result property="storyContent" column="story_content"/>
+    <result property="isTop" column="is_top"/>
+    <result property="historyTime" column="history_time"/>
+    <result property="createTime" jdbcType="TIMESTAMP" column="create_time"/>
+    <collection property="tagDTOList" ofType="com.haidong.storysharing.dto.TagDTO">
+      <id column="tag_id" property="id"/>
+      <result column="tag_name" property="tagName"/>
+    </collection>
+  </resultMap>-->
+  <sql id="History_Column_List">
+    id, user_id, story_id, create_time, update_time
+  </sql>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Long" resultMap="HistoryResultMap">
+    select
+    <include refid="History_Column_List" />
+    from tb_history
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+  <delete id="deleteByPrimaryKey">
+    delete from tb_history
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+
+  <delete id="deleteByUserId">
+    delete from tb_history where user_id = #{id}
+  </delete>
+  <insert id="insert" parameterType="com.haidong.storysharing.entry.History">
+    insert into tb_history (id, user_id, story_id,
+      create_time, update_time)
+    values (#{id,jdbcType=BIGINT}, #{userId,jdbcType=BIGINT}, #{storyId,jdbcType=BIGINT},
+      #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP})
+  </insert>
+
+  <!--<select id="historyListStoriesByUser" resultMap="historyStoryResultMap">
+    select  category_name,t.id as tag_id,t.tag_name,s.id,story_illustration,story_title,story_content,is_top,s.create_time,s.category_id,s.history_time history_time
+    from (
+           select ts.id,story_illustration,story_title,story_content,is_top,ts.create_time,category_id,th.create_time history_time
+           from tb_story ts,tb_history th
+           where is_delete = 0 and ts.id = th.story_id and th.user_id = #{uid}
+           order by th.create_time desc, is_top desc, id desc limit #{startIndex},#{length}
+         ) s
+           left join tb_category c on s.category_id = c.id
+           left join tb_story_tag tst on s.id = tst.story_id
+           left join tb_tag t on t.id = tst.tag_id
+    order by s.history_time desc, s.is_top desc,s.id desc
+  </select>-->
+
+
+  <insert id="insertSelective" parameterType="com.haidong.storysharing.entry.History">
+    insert into tb_history
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="userId != null">
+        user_id,
+      </if>
+      <if test="storyId != null">
+        story_id,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=BIGINT},
+      </if>
+      <if test="userId != null">
+        #{userId,jdbcType=BIGINT},
+      </if>
+      <if test="storyId != null">
+        #{storyId,jdbcType=BIGINT},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.haidong.storysharing.entry.History">
+    update tb_history
+    <set>
+      <if test="userId != null">
+        user_id = #{userId,jdbcType=BIGINT},
+      </if>
+      <if test="storyId != null">
+        story_id = #{storyId,jdbcType=BIGINT},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        update_time = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.haidong.storysharing.entry.History">
+    update tb_history
+    set user_id = #{userId,jdbcType=BIGINT},
+      story_id = #{storyId,jdbcType=BIGINT},
+      create_time = #{createTime,jdbcType=TIMESTAMP},
+      update_time = #{updateTime,jdbcType=TIMESTAMP}
+    where id = #{id,jdbcType=BIGINT}
+  </update>
+</mapper>

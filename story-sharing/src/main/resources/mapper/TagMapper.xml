@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.haidong.storysharing.dao.TagMapper">
+  <resultMap id="TagResultMap" type="com.haidong.storysharing.entry.Tag">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="tag_name" jdbcType="VARCHAR" property="tagName" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+  </resultMap>
+  <sql id="Tag_Column_List">
+    id, tag_name, create_time, update_time
+  </sql>
+  <select id="selectList" resultMap="TagResultMap">
+    select <include refid="Tag_Column_List"></include>
+    from tb_tag
+  </select>
+
+  <select id="tagCount" resultType="int">
+    select count(id) from tb_tag
+  </select>
+
+  <select id="getTagsId" resultType="list">
+    select id from tb_tag where tag_name in
+    <foreach open="(" collection="tagsNameList" item="tagName" separator="," close=")">
+        #{tagName}
+    </foreach>
+  </select>
+
+  <select id="getTagId" resultType="int">
+    select id from tb_tag where tag_name = #{tagName}
+  </select>
+
+  <insert id="insertTagIdByStory" parameterType="com.haidong.storysharing.dto.StoryTagDTO">
+    insert into tb_story_tag
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="storyId != null">
+        story_id ,
+      </if>
+      <if test="tagId != null">
+        tag_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="storyId != null">
+        #{storyId,jdbcType=BIGINT},
+      </if>
+      <if test="tagId != null">
+        #{tagId,jdbcType=BIGINT},
+      </if>
+    </trim>
+  </insert>
+
+  <insert id="insertOne" parameterType="com.haidong.storysharing.entry.Tag">
+    insert into tb_tag
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="tagName != null">
+        tag_name ,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+        <if test="updateTime != null">
+          update_time
+        </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="tagName != null">
+        #{tagName},
+      </if>
+      <if test="createTime != null">
+        #{createTime},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime}
+      </if>
+    </trim>
+  </insert>
+
+  <delete id="deleteOne" parameterType="int">
+    delete from tb_tag where id = #{id}
+  </delete>
+
+  <delete id="deleteTag" parameterType="int">
+    delete from tb_story_tag where story_id = #{sid}
+  </delete>
+</mapper>

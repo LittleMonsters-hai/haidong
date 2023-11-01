@@ -1,0 +1,385 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+mapper:是整个文件的大标签，用来开始和结束xml文件
+属性：
+    namespace:指定命名空间（相当于包名），用来区分不同mapper.xml
+    文件中相同的id属性
+-->
+<mapper namespace="com.haidong.storysharing.dao.StoryDao">
+    <resultMap id="storyRM" type="story">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="storyIllustration" column="story_illustration"/>
+        <result property="storyTitle" column="story_title"/>
+        <result property="storyContent" column="story_content"/>
+        <result property="status" column="status"/>
+        <result property="isTop" column="is_top"/>
+        <result property="isDelete" column="is_delete"/>
+        <result property="originalUrl" column="original_url"/>
+        <result property="createTime" jdbcType="TIMESTAMP" column="create_time"/>
+        <result property="modifyTime" jdbcType="TIMESTAMP" column="modify_time"/>
+    </resultMap>
+
+    <resultMap id="storyHomeResultMap" type="com.haidong.storysharing.dto.StoryHomeDTO">
+        <id property="id" column="id"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="categoryName" column="category_name"/>
+        <result property="storyIllustration" column="story_illustration"/>
+        <result property="storyTitle" column="story_title"/>
+        <result property="storyContent" column="story_content"/>
+        <result property="isTop" column="is_top"/>
+        <result property="createTime" jdbcType="TIMESTAMP" column="create_time"/>
+        <collection property="tagDTOList" ofType="com.haidong.storysharing.dto.TagDTO">
+            <id column="tag_id" property="id"/>
+            <result column="tag_name" property="tagName"/>
+        </collection>
+    </resultMap>
+
+    <resultMap id="historyStoryResultMap" type="com.haidong.storysharing.dto.StoryHistoryDTO">
+        <result property="id" column="id"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="categoryName" column="category_name"/>
+        <result property="storyIllustration" column="story_illustration"/>
+        <result property="storyTitle" column="story_title"/>
+        <result property="storyContent" column="story_content"/>
+        <result property="isTop" column="is_top"/>
+        <result property="historyTime" column="history_time"/>
+        <result property="createTime" jdbcType="TIMESTAMP" column="create_time"/>
+        <collection property="tagDTOList" ofType="com.haidong.storysharing.dto.TagDTO">
+            <id column="tag_id" property="id"/>
+            <result column="tag_name" property="tagName"/>
+        </collection>
+    </resultMap>
+
+    <resultMap id="storyConciseResultMap" type="com.haidong.storysharing.dto.StoryConciseDTO">
+        <id property="id" column="id"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="categoryName" column="category_name"/>
+        <result property="storyIllustration" column="story_illustration"/>
+        <result property="storyTitle" column="story_title"/>
+        <result property="createTime" jdbcType="TIMESTAMP" column="create_time"/>
+        <collection property="tagDTOList" ofType="com.haidong.storysharing.dto.TagDTO">
+            <id column="tag_id" property="id"/>
+            <result column="tag_name" property="tagName"/>
+        </collection>
+    </resultMap>
+
+    <resultMap id="storyResultMap" type="com.haidong.storysharing.dto.StoryDTO">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="categoryName" column="category_name"/>
+        <result property="storyIllustration" column="story_illustration"/>
+        <result property="storyTitle" column="story_title"/>
+        <result property="storyContent" column="story_content"/>
+        <result property="createTime" jdbcType="TIMESTAMP" column="create_time"/>
+        <result property="modifyTime" jdbcType="TIMESTAMP" column="modify_time"/>
+        <collection property="tagDTOList" ofType="com.haidong.storysharing.dto.TagDTO">
+            <id column="tag_id" property="id"/>
+            <result column="tag_name" property="tagName"/>
+        </collection>
+    </resultMap>
+
+    <select id="listStoriesByCondition" resultMap="storyConciseResultMap">
+        select
+            category_name,
+            t.id as tag_id,
+            t.tag_name,
+            s.id,
+            story_illustration,
+            story_title,
+            s.create_time,
+            s.category_id
+        from(
+                select
+                    id,
+                    story_illustration,
+                    story_title,
+                    create_time,
+                    category_id,
+                    story_content
+                from tb_story
+                    <where>
+                        <if test="condition.categoryId != null">
+                            category_id = #{condition.categoryId}
+                        </if>
+                        <if test="condition.tagId != null">
+                            id IN(
+                            select story_id
+                            from tb_story_tag
+                            where tag_id = #{condition.tagId}
+                            )
+                        </if>
+                    </where>
+            and is_delete = 0
+            and status = 1
+            order by id desc
+            limit #{startIndex},#{length}
+            ) s
+        left join tb_category c on s.category_id = c.id
+        left join tb_story_tag st on s.id = st.story_id
+        left join tb_tag t on t.id = st.tag_id
+    </select>
+
+    <select id="selectAllStory" resultMap="storyRM">
+        select * from tb_story
+    </select>
+
+    <select id="hostStoryList" resultType="com.haidong.storysharing.dto.StorySearchDTO">
+        select id ,s.story_title storyTitle,s.story_content storyContent,is_delete isDelete,status
+        from tb_story s
+        where s.status=1 and s.is_delete = 0 and s.id in
+        <foreach open="(" collection="storyIdList" item="storyId" separator="," close=")">
+            #{storyId}
+        </foreach>
+    </select>
+
+    <select id="getStoryById" resultMap="storyResultMap">
+        SELECT
+            s.id,
+            s.user_id,
+            story_illustration,
+            story_title,
+            story_content,
+            s.original_url,
+            s.create_time,
+            s.modify_time,
+            s.category_id,
+            category_name,
+            t.id AS tag_id,
+            t.tag_name
+        FROM
+            tb_story s
+                LEFT JOIN tb_category c ON s.category_id = c.id
+                LEFT JOIN tb_story_tag stg ON s.id = stg.story_id
+                LEFT JOIN tb_tag t ON t.id = stg.tag_id
+        WHERE
+            s.id = #{StoryId}
+          AND s.is_delete = 0
+          AND s.status = 1
+    </select>
+
+    <select id="getStoryByIdEdit" resultMap="storyResultMap">
+        SELECT
+            s.id,
+            s.user_id,
+            story_illustration,
+            story_title,
+            story_content,
+            s.original_url,
+            s.create_time,
+            s.modify_time,
+            s.category_id,
+            category_name,
+            t.id AS tag_id,
+            t.tag_name
+        FROM
+            tb_story s
+                LEFT JOIN tb_category c ON s.category_id = c.id
+                LEFT JOIN tb_story_tag stg ON s.id = stg.story_id
+                LEFT JOIN tb_tag t ON t.id = stg.tag_id
+        WHERE
+            s.id = #{StoryId}
+          AND s.is_delete = 0
+    </select>
+
+    <select id="getStoryCount" resultType="int" parameterType="int">
+        select count(id)
+        from tb_story
+        where user_id = #{userId}
+    </select>
+
+    <select id="listStories" resultMap="storyHomeResultMap">
+        select  category_name,t.id as tag_id,t.tag_name,s.id,story_illustration,story_title,story_content,is_top,s.create_time,s.category_id
+        from (
+                 select id,story_illustration,story_title,story_content,is_top,create_time,category_id
+                 from tb_story
+                 where is_delete = 0 and status = 1
+                 order by is_top desc, id desc limit #{startIndex},#{length}
+             ) s
+                 left join tb_category c on s.category_id = c.id
+                 left join tb_story_tag tst on s.id = tst.story_id
+                 left join tb_tag t on t.id = tst.tag_id
+        order by s.is_top desc,s.id desc
+    </select>
+
+    <select id="historyListStoriesByUser" resultMap="historyStoryResultMap">
+        select  category_name,t.id as tag_id,t.tag_name,s.id,story_illustration,story_title,story_content,is_top,s.create_time,s.category_id,s.history_time history_time
+        from (
+                 select ts.id,story_illustration,story_title,story_content,is_top,ts.create_time,category_id,th.create_time history_time
+                 from tb_story ts,tb_history th
+                 where is_delete = 0 and ts.id = th.story_id and th.user_id = #{uid}
+                 order by th.create_time desc, is_top desc, id desc limit #{startIndex},#{length}
+             ) s
+                 left join tb_category c on s.category_id = c.id
+                 left join tb_story_tag tst on s.id = tst.story_id
+                 left join tb_tag t on t.id = tst.tag_id
+        order by s.history_time desc, s.is_top desc,s.id desc
+    </select>
+
+    <select id="listStoriesByUser" resultMap="storyHomeResultMap">
+        select  category_name,t.id as tag_id,t.tag_name,s.id,story_illustration,story_title,story_content,is_top,s.create_time,s.category_id
+        from (
+                 select id,story_illustration,story_title,story_content,is_top,create_time,category_id
+                 from tb_story
+                 where is_delete = 0 and user_id = #{uid}
+                 order by is_top desc, id desc limit #{startIndex},#{length}
+             ) s
+                 left join tb_category c on s.category_id = c.id
+                 left join tb_story_tag tst on s.id = tst.story_id
+                 left join tb_tag t on t.id = tst.tag_id
+        order by s.is_top desc,s.id desc
+    </select>
+
+    <select id="selectOneById" resultMap="storyRM" parameterType="int">
+        select * from tb_story where id = #{id}
+    </select>
+    <resultMap id="storyPublishRM" type="com.haidong.storysharing.dto.StoryPublishDTO">
+        <result property="userId" column="user_id"/>
+        <result property="categoryId" column="category_id"/>
+        <result property="storyIllustration" column="story_illustration"/>
+        <result property="storyTitle" column="story_title"/>
+        <result property="storyContent" column="story_content"/>
+        <result property="status" column="status"/>
+        <result property="isTop" column="is_top"/>
+        <result property="isDelete" column="is_delete"/>
+        <result property="createTime" jdbcType="TIMESTAMP" column="create_time"/>
+        <result property="modifyTime" jdbcType="TIMESTAMP" column="modify_time"/>
+    </resultMap>
+
+    <select id="listArticlesBySearch" resultType="com.haidong.storysharing.dto.StorySearchDTO">
+        select id ,s.story_title storyTitle,s.story_content storyContent,is_delete isDelete,status
+        from tb_story s
+        where s.status=1 and s.is_delete = 0 and s.story_title like concat('%',#{keywords},'%')
+    </select>
+
+    <insert id="saveStory" parameterType="story">
+        insert into tb_story
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            <if test="userId != null">
+                user_id ,
+            </if>
+            <if test="categoryId != null">
+                category_id,
+            </if>
+            <if test="storyIllustration != null">
+                story_illustration,
+            </if>
+            <if test="storyTitle != null">
+                story_title,
+            </if>
+            <if test="storyContent != null">
+                story_content,
+            </if>
+            <if test="isTop != null">
+                is_top,
+            </if>
+            <if test="isDelete != null">
+                is_delete,
+            </if>
+            <if test="status != null">
+                status,
+            </if>
+            <if test="createTime != null">
+                create_time,
+            </if>
+            <if test="modifyTime != null">
+                modify_time,
+            </if>
+            <if test="originalUrl != null">
+                original_url,
+            </if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            <if test="userId != null">
+                #{userId,jdbcType=BIGINT},
+            </if>
+            <if test="categoryId != null">
+                #{categoryId,jdbcType=BIGINT},
+            </if>
+            <if test="storyIllustration != null">
+                #{storyIllustration,jdbcType=VARCHAR},
+            </if>
+            <if test="storyTitle != null">
+                #{storyTitle,jdbcType=VARCHAR},
+            </if>
+            <if test="storyContent != null">
+                #{storyContent,jdbcType=VARCHAR},
+            </if>
+            <if test="isTop != null">
+                #{isTop,jdbcType=TINYINT},
+            </if>
+            <if test="isDelete != null">
+                #{isDelete,jdbcType=TINYINT},
+            </if>
+            <if test="status != null">
+                #{status,jdbcType=TINYINT},
+            </if>
+            <if test="createTime != null">
+                #{createTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="modifyTime != null">
+                #{modifyTime,jdbcType=TIMESTAMP},
+            </if>
+            <if test="originalUrl != null">
+                #{originalUrl},
+            </if>
+        </trim>
+    </insert>
+
+    <update id="editStory" parameterType="story">
+        update tb_story
+        <set>
+            <if test="userId != null">
+                user_id = #{userId},
+            </if>
+            <if test="categoryId != null">
+                category_id = #{categoryId},
+            </if>
+            <if test="storyIllustration != null">
+                story_illustration = #{storyIllustration},
+            </if>
+            <if test="storyTitle != null">
+                story_title = #{storyTitle},
+            </if>
+            <if test="storyContent != null">
+                story_content = #{storyContent},
+            </if>
+            <if test="isTop != null">
+                is_top = #{isTop},
+            </if>
+            <if test="isDelete != null">
+                is_delete = #{isDelete},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="originalUrl != null">
+                original_url = #{originalUrl},
+            </if>
+            <if test="createTime != null">
+                create_time = #{createTime},
+            </if>
+            <if test="modifyTime != null">
+                modify_time = #{modifyTime}
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <delete id="deleteStoryListByUserId">
+        delete from tb_story where user_id =#{uid}
+    </delete>
+
+    <delete id="deleteStory">
+        delete from tb_story where id = #{id}
+    </delete>
+
+    <select id="getStoryIdByUserId" resultType="int">
+        select s.id from tb_story s where s.user_id = #{uid} order by s.create_time desc limit 0,1
+    </select>
+</mapper>

@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.haidong.storysharing.dao.CommentMapper">
+  <resultMap id="CommentResultMap" type="com.haidong.storysharing.entry.Comment">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="user_id" jdbcType="INTEGER" property="userId" />
+    <result column="topic_id" jdbcType="INTEGER" property="topicId" />
+    <result column="comment_content" property="commentContent"/>
+    <result column="reply_user_id" jdbcType="INTEGER" property="replyUserId" />
+    <result column="parent_id" jdbcType="INTEGER" property="parentId" />
+    <result column="type" jdbcType="TINYINT" property="type" />
+    <result column="is_delete" jdbcType="TINYINT" property="isDelete" />
+    <result column="is_review" jdbcType="BIT" property="isReview" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+  </resultMap>
+  <sql id="Comment_Column_List">
+    id, user_id, topic_id, reply_user_id, parent_id, type, is_delete, is_review, create_time,
+    update_time
+  </sql>
+  <select id="listComments" resultType="com.haidong.storysharing.dto.CommentDTO" parameterType="com.haidong.storysharing.VO.CommentVO">
+    SELECT
+    ui.nickname,
+    ui.head_picture headPicture,
+    ui.web_site webSite,
+    c.user_id userId,
+    c.id,
+    c.comment_content commentContent,
+    c.create_time createTime
+    FROM
+    tb_comment c
+    JOIN tb_user_author_info ui ON c.user_id = ui.id
+    <where>
+      <if test="commentVO.topicId != null">
+        topic_id = #{commentVO.topicId}
+      </if>
+      AND type = #{commentVO.type}
+      AND c.is_review = 1
+      AND parent_id IS NULL
+    </where>
+    ORDER BY
+    c.id DESC
+    LIMIT #{startIndex},#{length}
+  </select>
+
+
+  <select id="listReplies" resultType="com.haidong.storysharing.dto.ReplyDTO">
+    SELECT
+    *
+    FROM
+    (
+    SELECT
+    c.user_id userId,
+    u.nickname,
+    u.head_picture HeadPicture,
+    u.web_site webSite,
+    c.reply_user_id replyUserId,
+    r.nickname AS replyNickname,
+    r.web_site AS replyWebSite,
+    c.id,
+    c.parent_id parentId,
+    c.comment_content commentContent,
+    c.create_time createTime,
+    row_number () over ( PARTITION BY parent_id ORDER BY c.create_time ASC ) as row_num
+    FROM
+    tb_comment c
+    JOIN tb_user_author_info u ON c.user_id = u.id
+    JOIN tb_user_author_info r ON c.reply_user_id = r.id
+    WHERE
+    c.is_review = 1
+    AND
+    parent_id IN
+    (
+    <foreach collection="commentIdList" item="commentId" separator=",">
+      #{commentId}
+    </foreach>
+    )
+    ) t
+    WHERE
+    4 > row_num
+  </select>
+
+  <insert id="saveComment" parameterType="com.haidong.storysharing.entry.Comment">
+    insert into tb_comment
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="userId != null">
+        user_id,
+      </if>
+      <if test="topicId != null">
+        topic_id,
+      </if>
+      <if test="replyUserId != null">
+        reply_user_id,
+      </if>
+      <if test="commentContent != null">
+        comment_content,
+      </if>
+      <if test="parentId != null">
+        parent_id,
+      </if>
+      <if test="type != null">
+        type,
+      </if>
+      <if test="isDelete != null">
+        is_delete,
+      </if>
+      <if test="isReview != null">
+        is_review,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="userId != null">
+        #{userId},
+      </if>
+      <if test="topicId != null">
+        #{topicId},
+      </if>
+      <if test="replyUserId != null">
+        #{replyUserId},
+      </if>
+
+      <if test="commentContent != null">
+        #{commentContent},
+      </if>
+
+      <if test="parentId != null">
+        #{parentId},
+      </if>
+
+      <if test="type != null">
+        #{type},
+      </if>
+      <if test="isDelete != null">
+        #{isDelete},
+      </if>
+      <if test="isReview != null">
+        #{isReview},
+      </if>
+      <if test="createTime != null">
+        #{createTime}
+      </if>
+    </trim>
+  </insert>
+
+  <delete id="deleteComment" parameterType="int">
+    delete from tb_comment where id =#{cid} or parent_id = #{cid}
+  </delete>
+
+  <delete id="deleteReplay" parameterType="int">
+    delete from tb_comment where id = #{rid}
+  </delete>
+
+  <select id="listReplyCountByCommentId" resultType="com.haidong.storysharing.dto.ReplyCountDTO">
+    SELECT
+    parent_id as commentId,
+    count(1) AS replyCount
+    FROM
+    tb_comment
+    WHERE
+    is_review = 1
+    AND
+    parent_id IN
+    <foreach open="(" collection="commentIdList" item="commentId" separator="," close=")">
+      #{commentId}
+    </foreach>
+    GROUP BY
+    parent_id
+  </select>
+
+
+  <select id="selectCount" resultType="int" parameterType="com.haidong.storysharing.VO.CommentVO">
+    select count(id)
+    from tb_comment
+    where topic_id = #{topicId} and parent_id is null and is_review = 1
+  </select>
+
+  <delete id="deleteCommentsByUserId">
+    delete from tb_comment where user_id = #{uid}
+  </delete>
+
+  <select id="listRepliesByCommentId" resultType="com.haidong.storysharing.dto.ReplyDTO">
+    SELECT
+      c.user_id userId,
+      u.nickname,
+      u.head_picture headPicture,
+      u.web_site webSite,
+      c.reply_user_id replyUserId,
+      r.nickname as replyNickname,
+      r.web_site as replyWebSite,
+      c.id,
+      c.parent_id parentId,
+      c.comment_content commentContent,
+      c.create_time createTime
+    FROM
+      tb_comment c
+        JOIN tb_user_author_info u ON c.user_id = u.id
+        JOIN tb_user_author_info r ON c.reply_user_id = r.id
+    WHERE
+      c.is_review = 1
+      AND
+      parent_id =#{commentId}
+    ORDER BY
+      c.id ASC
+      LIMIT #{current}, #{size}
+  </select>
+
+
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Integer">
+    delete from tb_comment
+    where id = #{id,jdbcType=INTEGER}
+  </delete>
+  <insert id="insert" parameterType="com.haidong.storysharing.entry.Comment">
+    insert into tb_comment (id, user_id, topic_id,
+      reply_user_id, parent_id, type,
+      is_delete, is_review, create_time,
+      update_time, comment_content)
+    values (#{id,jdbcType=INTEGER}, #{userId,jdbcType=INTEGER}, #{topicId,jdbcType=INTEGER},
+      #{replyUserId,jdbcType=INTEGER}, #{parentId,jdbcType=INTEGER}, #{type,jdbcType=TINYINT},
+      #{isDelete,jdbcType=TINYINT}, #{isReview,jdbcType=BIT}, #{createTime,jdbcType=TIMESTAMP},
+      #{updateTime,jdbcType=TIMESTAMP}, #{commentContent,jdbcType=LONGVARCHAR})
+  </insert>
+  <insert id="insertSelective" parameterType="com.haidong.storysharing.entry.Comment">
+    insert into tb_comment
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="userId != null">
+        user_id,
+      </if>
+      <if test="topicId != null">
+        topic_id,
+      </if>
+      <if test="replyUserId != null">
+        reply_user_id,
+      </if>
+      <if test="parentId != null">
+        parent_id,
+      </if>
+      <if test="type != null">
+        type,
+      </if>
+      <if test="isDelete != null">
+        is_delete,
+      </if>
+      <if test="isReview != null">
+        is_review,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+      <if test="commentContent != null">
+        comment_content,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=INTEGER},
+      </if>
+      <if test="userId != null">
+        #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="topicId != null">
+        #{topicId,jdbcType=INTEGER},
+      </if>
+      <if test="replyUserId != null">
+        #{replyUserId,jdbcType=INTEGER},
+      </if>
+      <if test="parentId != null">
+        #{parentId,jdbcType=INTEGER},
+      </if>
+      <if test="type != null">
+        #{type,jdbcType=TINYINT},
+      </if>
+      <if test="isDelete != null">
+        #{isDelete,jdbcType=TINYINT},
+      </if>
+      <if test="isReview != null">
+        #{isReview,jdbcType=BIT},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="commentContent != null">
+        #{commentContent,jdbcType=LONGVARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.haidong.storysharing.entry.Comment">
+    update tb_comment
+    <set>
+      <if test="userId != null">
+        user_id = #{userId,jdbcType=INTEGER},
+      </if>
+      <if test="topicId != null">
+        topic_id = #{topicId,jdbcType=INTEGER},
+      </if>
+      <if test="replyUserId != null">
+        reply_user_id = #{replyUserId,jdbcType=INTEGER},
+      </if>
+      <if test="parentId != null">
+        parent_id = #{parentId,jdbcType=INTEGER},
+      </if>
+      <if test="type != null">
+        type = #{type,jdbcType=TINYINT},
+      </if>
+      <if test="isDelete != null">
+        is_delete = #{isDelete,jdbcType=TINYINT},
+      </if>
+      <if test="isReview != null">
+        is_review = #{isReview,jdbcType=BIT},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        update_time = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="commentContent != null">
+        comment_content = #{commentContent,jdbcType=LONGVARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=INTEGER}
+  </update>
+</mapper>

@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.haidong.storysharing.dao.UserAuthorInfoMapper">
+  <resultMap id="UserInfoResultMap" type="com.haidong.storysharing.entry.UserAuthorInfo">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="email" jdbcType="VARCHAR" property="email" />
+    <result column="nickname" jdbcType="VARCHAR" property="nickname" />
+    <result column="head_picture" jdbcType="VARCHAR" property="headPicture" />
+    <result column="introduce" jdbcType="VARCHAR" property="introduce" />
+    <result column="web_site" jdbcType="VARCHAR" property="webSite" />
+    <result column="is_disable" jdbcType="INTEGER" property="isDisable" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+  </resultMap>
+  <resultMap id="UserInfoConciseResultMap" type="com.haidong.storysharing.entry.UserAuthorInfo">
+    <result column="email" jdbcType="VARCHAR" property="email" />
+    <result column="nickname" jdbcType="VARCHAR" property="nickname" />
+    <result column="head_picture" jdbcType="VARCHAR" property="headPicture" />
+    <result column="introduce" jdbcType="VARCHAR" property="introduce" />
+    <result column="web_site" jdbcType="VARCHAR" property="webSite" />
+    <result column="is_disable" jdbcType="INTEGER" property="isDisable" />
+  </resultMap>
+  <sql id="UserInfo_Column_List">
+    id, email, nickname, head_picture, introduce, web_site, is_disable, create_time,
+    update_time
+  </sql>
+  <sql id="UserInfo_Concise_Column_List">
+    id,email, nickname, head_picture, introduce, web_site
+  </sql>
+
+  <select id="selectAll" resultMap="UserInfoResultMap">
+    select *
+    from tb_user_author_info
+    limit #{startIndex},#{length}
+  </select>
+
+  <select id="selectIntro" resultType="string">
+    select introduce from tb_user_author_info where id =#{id}
+  </select>
+
+  <select id="countUserInfo" resultType="int">
+    select count(*) from tb_user_author_info
+  </select>
+
+
+  <select id="getPrimaryKeyByEmail" resultType="int">
+    select id
+    from tb_user_author_info
+    where email = #{email}
+  </select>
+  <select id="selectByPrimaryKey" parameterType="java.lang.Integer" resultMap="UserInfoResultMap">
+    select *
+    from tb_user_author_info
+    where id = #{id,jdbcType=BIGINT}
+  </select>
+
+  <update id="modifyHeadPicture">
+    update tb_user_author_info
+    set head_picture = #{path,jdbcType=VARCHAR}
+    where email = #{email}
+  </update>
+
+  <update id="updateIsDisable">
+    update tb_user_author_info
+    <set>
+      <if test="isDisable != null">
+        is_disable = #{isDisable},
+      </if>
+    </set>
+    where id = #{id}
+  </update>
+
+  <delete id="deleteUserInfo">
+    delete from tb_user_author_info tu where tu.id = #{uid}
+  </delete>
+
+  <update id="updateUserInfo" parameterType="com.haidong.storysharing.VO.UserInfoVo">
+    /*update tb_user_author_info set
+          nickname = #{nickname},
+          introduce = #{introduce},
+          webSite = #{webSite},
+    where id = #{id}*/
+    update tb_user_author_info
+        <set>
+          <if test="nickname != null">
+            nickname = #{nickname},
+          </if>
+          <if test="introduce != null">
+            introduce = #{introduce},
+          </if>
+          <if test="webSite != null">
+            webSite = #{webSite},
+          </if>
+          <if test="email != null">
+            email = #{email},
+          </if>
+        </set>
+    where id = #{id}
+  </update>
+
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+    delete from tb_user_author_info
+    where id = #{id,jdbcType=BIGINT}
+  </delete>
+  <insert id="insert" parameterType="userAuthorInfo">
+    insert into tb_user_author_info (id, email, nickname,
+      head_picture, introduce, web_site,
+      is_disable, create_time, update_time
+      )
+    values (#{id,jdbcType=BIGINT}, #{email,jdbcType=VARCHAR}, #{nickname,jdbcType=VARCHAR},
+      #{headPicture,jdbcType=VARCHAR}, #{introduce,jdbcType=VARCHAR}, #{webSite,jdbcType=VARCHAR},
+      #{isDisable,jdbcType=INTEGER}, #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP}
+      )
+  </insert>
+  <insert id="insertOne" parameterType="userAuthorInfo">
+    insert into tb_user_author_info
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="email != null">
+        email,
+      </if>
+      <if test="nickname != null">
+        nickname,
+      </if>
+      <if test="headPicture != null">
+        head_picture,
+      </if>
+      <if test="introduce != null">
+        introduce,
+      </if>
+      <if test="webSite != null">
+        web_site,
+      </if>
+      <if test="isDisable != null">
+        is_disable,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="email != null">
+        #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="nickname != null">
+        #{nickname,jdbcType=VARCHAR},
+      </if>
+      <if test="headPicture != null">
+        #{headPicture,jdbcType=VARCHAR},
+      </if>
+      <if test="introduce != null">
+        #{introduce,jdbcType=VARCHAR},
+      </if>
+      <if test="webSite != null">
+        #{webSite,jdbcType=VARCHAR},
+      </if>
+      <if test="isDisable != null">
+        #{isDisable,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null">
+        #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.haidong.storysharing.entry.UserAuthorInfo">
+    update tb_user_author_info
+    <set>
+      <if test="email != null">
+        email = #{email,jdbcType=VARCHAR},
+      </if>
+      <if test="nickname != null">
+        nickname = #{nickname,jdbcType=VARCHAR},
+      </if>
+      <if test="headPicture != null">
+        head_picture = #{headPicture,jdbcType=VARCHAR},
+      </if>
+      <if test="introduce != null">
+        introduce = #{introduce,jdbcType=VARCHAR},
+      </if>
+      <if test="webSite != null">
+        web_site = #{webSite,jdbcType=VARCHAR},
+      </if>
+      <if test="isDisable != null">
+        is_disable = #{isDisable,jdbcType=INTEGER},
+      </if>
+      <if test="createTime != null">
+        create_time = #{createTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        update_time = #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+    </set>
+    where id=#{id,jdbcType=BIGINT}
+  </update>
+</mapper>

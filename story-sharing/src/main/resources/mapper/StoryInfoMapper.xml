@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.haidong.storysharing.dao.StoryInfoMapper">
+  <resultMap id="StoryInfoResultMap" type="com.haidong.storysharing.entry.StoryInfo">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="story_id" jdbcType="BIGINT" property="storyId" />
+    <result column="like_count" jdbcType="BIGINT" property="likeCount" />
+    <result column="views_count" jdbcType="BIGINT" property="viewsCount" />
+  </resultMap>
+
+  <resultMap id="LikeViewsResultMap" type="com.haidong.storysharing.dto.StoryInfoDTO">
+    <result column="like_count" jdbcType="BIGINT" property="likeCount" />
+    <result column="views_count" jdbcType="BIGINT" property="viewsCount" />
+  </resultMap>
+  <sql id="StoryInfo_Column_List">
+    id, story_id, like_count, views_count
+  </sql>
+  <select id="getStoryInfo" resultMap="LikeViewsResultMap">
+    select like_count,views_count
+    from tb_story_info
+    where story_id = #{storyId}
+  </select>
+  <update id="updateLikeOrViews"></update>
+</mapper>

@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.haidong.storysharing.dao.UserAuthorMapper">
+  <resultMap id="BaseResultMap" type="com.haidong.storysharing.entry.UserAuthor">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="user_info_id" jdbcType="BIGINT" property="userInfoId" />
+    <result column="username" jdbcType="VARCHAR" property="username" />
+    <result column="password" jdbcType="VARCHAR" property="password" />
+    <result column="login_Type" jdbcType="BIGINT" property="loginType" />
+    <result column="ip_address" jdbcType="VARCHAR" property="ipAddress" />
+    <result column="register_time" jdbcType="TIMESTAMP" property="registerTime" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+    <result column="last_login_time" jdbcType="TIMESTAMP" property="lastLoginTime" />
+  </resultMap>
+  <sql id="Base_Column_List">
+    id, user_info_id, username, password, login_Type, ip_address, register_time, update_time,
+    last_login_time
+  </sql>
+
+  <select id="selectAll" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"></include>
+    from tb_user_author
+    limit #{startIndex},#{length}
+  </select>
+
+  <update id="modifyPassword" parameterType="com.haidong.storysharing.VO.PasswordVO">
+    update tb_user_author set password = #{newPassword} where id =#{id}
+  </update>
+
+  <select id="countUser" resultType="int">
+    select count(*)
+    from tb_user_author
+  </select>
+
+  <insert id="insertOne" parameterType="userAuthor">
+    insert into tb_user_author
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        id,
+      </if>
+      <if test="userInfoId != null">
+        user_info_id,
+      </if>
+      <if test="username != null">
+        username,
+      </if>
+      <if test="password != null">
+        password,
+      </if>
+      <if test="loginType != null">
+        login_Type,
+      </if>
+      <if test="ipAddress != null">
+        ip_address,
+      </if>
+      <if test="registerTime != null">
+        register_time,
+      </if>
+      <if test="updateTime != null">
+        update_time,
+      </if>
+      <if test="lastLoginTime != null">
+        last_login_time,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="id != null">
+        #{id,jdbcType=BIGINT},
+      </if>
+      <if test="userInfoId != null">
+        #{userInfoId,jdbcType=BIGINT},
+      </if>
+      <if test="username != null">
+        #{username,jdbcType=VARCHAR},
+      </if>
+      <if test="password != null">
+        #{password,jdbcType=VARCHAR},
+      </if>
+      <if test="loginType != null">
+        #{loginType,jdbcType=BIGINT},
+      </if>
+      <if test="ipAddress != null">
+        #{ipAddress,jdbcType=VARCHAR},
+      </if>
+      <if test="registerTime != null">
+        #{registerTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime,jdbcType=TIMESTAMP},
+      </if>
+      <if test="lastLoginTime != null">
+        #{lastLoginTime,jdbcType=TIMESTAMP},
+      </if>
+    </trim>
+  </insert>
+
+  <select id="selectByPrimaryKey" parameterType="int" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"></include>
+    from tb_user_author
+    <where>
+      <if test="id != null">
+        id = #{id}
+      </if>
+    </where>
+  </select>
+
+  <select id="selectUserAuthorByPwd" parameterType="String" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"></include>
+    from tb_user_author
+    <where>
+      <if test="username != null">
+        username = #{username}
+      </if>
+      <if test="password != null">
+        and password = #{password}
+      </if>
+    </where>
+  </select>
+
+  <select id="countOfUsername" resultType="int" parameterType="string">
+    select count(*)
+    from tb_user_author
+    <where>
+      <if test="username != null">
+        username = #{username}
+      </if>
+    </where>
+  </select>
+
+  <delete id="deleteUser">
+    delete from tb_user_author
+    <where>
+      <if test="id != null">
+        id = #{id}
+      </if>
+      <if test="uid != null">
+       and user_info_id = #{uid}
+      </if>
+    </where>
+  </delete>
+
+  <select id="selectOneByUsername" parameterType="string" resultMap="BaseResultMap">
+    select <include refid="Base_Column_List"></include>
+    from tb_user_author
+    <where>
+      <if test="username != null">
+        username = #{username}
+      </if>
+    </where>
+  </select>
+
+  <update id="updateLoginTime">
+    update tb_user_author
+    <set>
+      <if test="lastLoginTime != null">
+        last_login_time = #{lastLoginTime}
+      </if>
+    </set>
+    where id =#{userId}
+  </update>
+
+  <update id="modifyUsername">
+    update tb_user_author set username = #{username} where user_info_id = #{id}
+  </update>
+
+</mapper>

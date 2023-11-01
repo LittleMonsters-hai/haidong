@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.haidong.storysharing.dao.CategoryMapper">
+  <resultMap id="CategoryResultMap" type="com.haidong.storysharing.entry.Category">
+    <id column="id" jdbcType="INTEGER" property="id" />
+    <result column="category_name" jdbcType="VARCHAR" property="categoryName" />
+    <result column="create_time" jdbcType="TIMESTAMP" property="createTime" />
+    <result column="update_time" jdbcType="TIMESTAMP" property="updateTime" />
+  </resultMap>
+  <sql id="Category_Column_List">
+    id, category_name, create_time, update_time
+  </sql>
+
+  <select id="listCategoryDTO" resultType="com.haidong.storysharing.dto.CategoryDTO">
+    SELECT
+      c.id,
+      c.category_name categoryName,
+      COUNT( a.id ) AS StoryCount
+    FROM
+      tb_category c
+        LEFT JOIN ( SELECT id, category_id FROM tb_story WHERE is_delete = 0 AND `status` = 1 ) a ON c.id = a.category_id
+    GROUP BY
+      c.id
+  </select>
+
+  <select id="getAllCategory" resultMap="CategoryResultMap">
+    select <include refid="Category_Column_List"></include>
+    from tb_category
+  </select>
+
+  <select id="getIdByName" resultType="int" parameterType="string">
+    select id from tb_category where category_name = #{name}
+  </select>
+
+  <insert id="addCategory" parameterType="com.haidong.storysharing.entry.Category">
+    insert into tb_category
+    <trim prefix="(" suffix=")" suffixOverrides=",">
+      <if test="categoryName != null">
+        category_name ,
+      </if>
+      <if test="createTime != null">
+        create_time,
+      </if>
+      <if test="updateTime != null">
+        update_time
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides=",">
+      <if test="categoryName != null">
+        #{categoryName},
+      </if>
+      <if test="createTime != null">
+        #{createTime},
+      </if>
+      <if test="updateTime != null">
+        #{updateTime}
+      </if>
+    </trim>
+  </insert>
+
+  <delete id="deleteOne">
+    delete from tb_category where id = #{id}
+  </delete>
+</mapper>
